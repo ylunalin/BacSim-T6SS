@@ -1,0 +1,6 @@
+common.o: common.cc common.hh
+sim_params.o: sim_params.cc common.hh sim_params.hh
+bac_sim.o: bac_sim.cc bac_sim.hh common.hh file_output.hh strain.hh \
+ sim_params.hh bact.hh
+bac_sim_init.o: bac_sim_init.cc bac_sim.hh common.hh file_output.hh \
+ strain.hh sim_params.hh bact.hh
