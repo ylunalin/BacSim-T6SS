@@ -1,6 +1,6 @@
-include ../../config.mk
+include ./config.mk
 lflags=-L. `gsl-config --libs`
-iflags=-I. -I../../tgmg `gsl-config --cflags`
+iflags=-I. `gsl-config --cflags`
 
 # Lists of files to be built
 objs=common.o sim_params.o bac_sim.o bac_sim_init.o
@@ -9,7 +9,6 @@ src=$(patsubst %.o,%.cc,$(objs))
 execs=run_sim
 
 all:
-	$(MAKE) -C ../../tgmg lib
 	$(MAKE) executables
 
 executables: $(execs)

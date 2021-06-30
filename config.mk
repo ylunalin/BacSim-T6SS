@@ -1,3 +1,4 @@
+# Replace the compiler commands and the flags with ones on your computing system
 # Compiler and compilation flags
 cc=gcc-mp-9
 cxx=g++-mp-9 -fopenmp
