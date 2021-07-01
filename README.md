@@ -18,7 +18,7 @@ _John A. Paulson School of Engineering and Applied Sciences, Harvard University_
 3. After these changes, type <code> make </code> in the commandline in BacSim-T6SS/ directory, which will build an executable run_sim. This executable will use OpenMP to parallelize the computation if it is available.
 4. To run the executable, a config file (must have file extension .cfg) for the simulation must be provided as command line argument.
 5. Sample simulation config files can be found in sim_configs/ directory. Examples include
- * 
+ * [these sample .cfg files will be added soon]
 6. If POV-Ray is installed and the necessary output files (f.%05d_nr%d) are available, the perl script pov-movie.pl can be used to render the output files. For detailed usage, see the output of <pre> perl pov-movie.pl -h </pre>
 
 More complete documentation is under development.
