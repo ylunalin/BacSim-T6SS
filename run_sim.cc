@@ -4,7 +4,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cmath>
-#include <fftw3.h>
 #include "common.hh"
 #include "bac_sim.hh"
 #include "sim_params.hh"

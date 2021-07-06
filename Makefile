@@ -29,6 +29,6 @@ libbac.a: $(objs)
 	ar rs libbac.a $^
 
 run_sim: run_sim.cc libbac.a $(headers)
-	$(cxx) $(cflags) $(iflags) -o $@ $< -lbac $(lflags) $(fftw_lflags)
+	$(cxx) $(cflags) $(iflags) -o $@ $< -lbac $(lflags)
 
 .PHONY: clean depend executables

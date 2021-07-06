@@ -6,7 +6,6 @@
 #ifdef _OPENMP
 #include "omp.h"
 #endif
-#include <fftw3.h>
 
 #include "common.hh"
 #include "file_output.hh"
