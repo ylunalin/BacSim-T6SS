@@ -11,6 +11,7 @@ _John A. Paulson School of Engineering and Applied Sciences, Harvard University_
 - GSL (GNU Scientific Library)
 - Perl         (For image processing only)
 - Povray 3.7   (For image processing only)
+- FFMPEG       (For making movies)
 
 ## Get started:
 1. Download or <code> git clone </code> BacSim-T6SS repository.
@@ -21,7 +22,12 @@ _John A. Paulson School of Engineering and Applied Sciences, Harvard University_
  * si-movie-1.cfg : competiton between wildtype ES401 and wildtype FQ-A002, where both strains start from liquid culture T6SS activity level. Using periodic boundary conditiion to mimicking the interior of a colony.
  * si-movie-2.cfg : competiton between wildtype ES401 and wildtype FQ-A002, where both strains start with fully activated T6SS. Boundary condition as above.
  * si-movie-3.cfg : competiton between a T6SS+ lethal strian and a nonlethal strain that does not fire any T6SS attacks, in a range expansion.
-6. If POV-Ray is installed and the necessary output files (f.%05d_nr%d) are available, the perl script pov-movie.pl can be used to render the output files. For detailed usage, see the output of <pre> perl pov-movie.pl -h </pre>
+ 
+These examples would produce the data files needed to render the correpsonding supplementary movies in the manuscript listed below.
+
+6. If POV-Ray is installed and the necessary output files (f.%05d_nr%d) are available, the perl script pov-movie.pl can be used to render the output files.
+For example, if we want to render every frame in the directory my_sim.out/ and then link them into a movie, we can issue the command <pre> perl pov-movie.pl -m my_sim.out</pre> where -m is a flag that tells the script to call ffmpeg and link the rendered pngs into a movie.
+In the pov_headers/ directory, we also provide some header files that define the colors, textures, and other rendering features for POV-Ray. For detailed usage of pov-movie.pl, see the help page by typing <pre> perl pov-movie.pl -h </pre>
 
 More complete documentation is under development.
 In the meantime, for any questions, feel free to contact the authors of this repository.
