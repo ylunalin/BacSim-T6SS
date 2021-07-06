@@ -7,7 +7,7 @@ _John A. Paulson School of Engineering and Applied Sciences, Harvard University_
 ## Software/library requirements:
 
 - GNUMake
-- GNUGCC compiler
+- GNU GCC compiler
 - GSL (GNU Scientific Library)
 - Perl         (For image processing only)
 - Povray 3.7   (For image processing only)
