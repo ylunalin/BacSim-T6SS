@@ -228,7 +228,7 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 	}
 }
 
-/** Carres out a bacterial growth simulation
+/** Carries out a bacterial growth simulation
  * until a target number of bacteria is reached. */
 void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool output, bool verbose) {
 	double wallt=0,t0;
@@ -492,7 +492,7 @@ void bac_sim::integrate_and_divide(double dt, bool verbose) {
 //                                  printf("-> Bact %d's target is getting stab: targ id %d targ living %d\n", b->id, targBact.id, targBact.living);
 //                              }
                             } else {
-                                // TODO: sister cells should get same relief from recylced material
+                                // TODO: sister cells should get same relief from recycled material
                             }
                         }
                     }
@@ -721,7 +721,7 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
             if(bbcap){
                 // find the closest cap center to the contact point on bact bb
                 // since the coordinates of bb is shifted due to periodic boundaries
-                // to do mehanical interactions, we have to shift them back
+                // to do mechanical interactions, we have to shift them back
                 double back_shifted[4] = {ox-prx, oy-pry, px-prx, py-pry};
                 bb.add_inhibit_forces(local_rep_force, back_shifted[0], back_shifted[1], back_shifted[2], back_shifted[3], contact_length);
             }
