@@ -126,8 +126,8 @@ sim_params::sim_params(const char *fn):
         } else if(se(bp, "sigma_a")){
             sigma_a = next_double(ln);
 		} else if(se(bp, "sigma_ts")){
-			sigma_ts[0]= next_double(ln);
-			sigma_ts[1]= final_double(ln);
+			sigma_ts[0] = final_double(ln);
+            sigma_ts[1] = sigma_ts[0];
 		} else if(se(bp, "init_prob_on")){
 			init_prob_on[0]= next_double(ln);
 			init_prob_on[1]= final_double(ln);
