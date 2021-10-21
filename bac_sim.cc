@@ -25,7 +25,7 @@ bac_sim::bac_sim(sim_params *sp):
 	internal_sp(false), jmin(n), jmax(0), threads(1), iter(0), tot_l(0),
 #ifdef _OPENMP
 	//max_threads(1),
-	max_threads(omp_get_max_threads()>20?20:omp_get_max_threads()),
+	max_threads(omp_get_max_threads()>40?40:omp_get_max_threads()),
 #else
 	max_threads(1),
 #endif
