@@ -101,18 +101,19 @@ while(-e $in_fn) {
 	last if defined $opt_n && $a>$opt_n;
     if ((defined $opt_d && -e "$dr/$fn") || (defined $opt_b && $a<$opt_b)) {
 
-        if($nr== $opt_x) {
-            $nr=0;
-            $a+=$every;
+        if(defined $opt_x) {
+            if($nr == $opt_x-1) {
+                $nr=0;
+                $a+=$every;
+            } else {
+                $nr+=1;
+            }
         } else {
-            $nr+=1;
+            $a += $every;
         }
         next;
     }
 
-	#$cam=exp(1.7+0.00402283*$a/2);
-	#$cam=10 if $cam<10;
-	#$cam*=2;
 	$mrsq=0;
 
 	# Find camera size and read in bacteria
@@ -132,8 +133,7 @@ while(-e $in_fn) {
                 $ty[$i]=$t;
             }
             if(defined $opt_f){
-                #$cfac[$i]=int($cfac_*1000);
-                $cfac[$i]=$sheath_;
+                $cfac[$i]=int($cfac_*1000);
             }
             if(defined $opt_g){
                 $sheath_ = 2*$opt_g if ($sheath_>2*$opt_g);
@@ -150,7 +150,6 @@ while(-e $in_fn) {
 	$cam+=1;
 	$cam*=2.5;
 	$ncam=$cam if $ncam<$cam;
-    # HACK TO MAKE THE FIELD OF VIEW CONSISTENT
 
 	# Check for lineage coloring
 	if(defined $opt_l && $ntrans==0 && $i>=$opt_l) {
@@ -222,12 +221,12 @@ EOF
 	# Send the POV-Ray file to a node for processing
 	if($opt_r) {
 		$hst=$nlist[$h-1];
-		print "Frame $a to $hst\n";
+		print "Frame $a nr $nr to $hst\n";
 		$nice="nice -n 19";
 		`rsync -rz $dr/rtemp$h.pov $hst:$remote_dir`;
 		exec "ssh $hst \"cd $remote_dir;$nice povray -D +O$fn +W$pov_width +H$pov_height $pov_flags rtemp$h.pov\" $verb ; rsync -rz $hst:$remote_dir/$fn $dr ; ssh $hst \"rm $remote_dir/$fn $remote_dir/rtemp$h.pov\" " if (($pid[$h]=fork)==0);
 	} else {
-		print "Frame $a to fork $h\n";
+		print "Frame $a nr $nr to fork $h\n";
 		exec "cd $dr; povray -D +O$fn +W$pov_width +H$pov_height $pov_flags rtemp$h.pov $verb" if (($pid[$h]=fork)==0);
 	}
 
@@ -241,11 +240,15 @@ EOF
 		$h++;$queue=1 if $h>=$nodes;
 	}
 
-	if($nr== $opt_x) {
-        $nr=0;
-        $a+=$every;
+    if(defined $opt_x) {
+            if($nr == $opt_x-1) {
+                $nr=0;
+                $a+=$every;
+            } else {
+                $nr+=1;
+            }
     } else {
-        $nr+=1;
+        $a += $every;
     }
     # update the filename
     $in_fn=sprintf("%s/%s.%05d%s%d", $dr, $fpref, $a, $fsuff, $nr);
@@ -262,11 +265,11 @@ if ($opt_m) {
 	if($uname=~/Linux/ or $uname=~/Darwin/) {
         if(!defined $opt_c) {
             #system "ffmpeg -y -r 20 -i $dr/${ff}_%05d.png -vb 20M ${mn}.mpg";
-            system "ffmpeg -r 10 -y -i $dr/${ff}_%05d.png -preset veryslow -c:v libx265 -crf 17 -pix_fmt yuv420p -tag:v hvc1 -movflags faststart ${mn}.mov";
+            system "ffmpeg -r 20 -y -i $dr/${ff}_%05d.png -preset veryslow -c:v libx265 -crf 17 -pix_fmt yuv420p -tag:v hvc1 -movflags faststart $mn.mov";
         }
         else {
             #system "ffmpeg -y -r 20 -i $dr/${ff}_%05d.png -vb 20M ${mn}_${as}.mpg";
-            system "ffmpeg -r 10 -y -i $dr/${ff}_%05d.png -preset veryslow -c:v libx265 -crf 17 -pix_fmt yuv420p -tag:v hvc1 -movflags faststart ${mn}_${as}.mov";
+            system "ffmpeg -r 20 -y -i $dr/${ff}_%05d.png -preset veryslow -c:v libx265 -crf 17 -pix_fmt yuv420p -tag:v hvc1 -movflags faststart ${mn}_${as}.mov";
         }
 	} elsif($uname=~/Darwin/) {
 		unlink "$mn.mov";
