@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     puts("#");
     puts("#");
     printf("# Average statics over %d iterations.\n", nr);
-    printf("# Frame\ttime\tnbact\tstrain0(red)\tstrain1(blue)\tSTD1\tSTD2\tactive0\tactive1\tSTD1\tSTD2\tsheahts1\tsheath2\tSTD1\tSTD2\n");
+    printf("# Frame\ttime\tnbact\tstrain0(red)\tstrain1(blue)\tSTD1\tSTD2\tactive0\tactive1\tSTD1\tSTD2\tsheaths1\tsheath2\tSTD1\tSTD2\n");
 
     for(int i=0;i<nentries;i++){
         int ind = i*nfields;
