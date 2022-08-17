@@ -125,7 +125,7 @@ class bac_sim {
 
 		/** Data analysis functions */
 		int total_bacteria();
-		void specific_bac_count(int &sp1, int &sp2, double &ap1, double &ap2, double &tot_area, double &sh1, double &sh2);
+		void specific_bac_count(int &sp1, int &sp2, int &num_zero_crd_fac, double &ap1, double &ap2, double &tot_area, double &sh1, double &sh2);
 
 	//private:
 		/** If bac_sim has an internal sim_params object */
@@ -227,9 +227,6 @@ class bac_sim {
             return gsl_ran_binomial(randos[thr_num], 0.5, N);
         }
         double random_length(int type, int thr_num) const{
-            //double alpha = spars->alphas[type];
-            //double sigma_v = log(2)*(2*(spars->l0s[type]+r0))*spars->sigma_ts[type]/(spars->double_times[type] * sqrt(alpha*(2-alpha)));
-            //printf("we have sigma_s %g\n", sigma_v);
             double rnd = gsl_rand(thr_num);
             if(spars->sigma_l ==0) rnd = 0;
             return (1+rnd)*spars->l0s[type] + rnd*r0;

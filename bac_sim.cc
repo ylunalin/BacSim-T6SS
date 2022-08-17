@@ -25,7 +25,7 @@ bac_sim::bac_sim(sim_params *sp):
 	internal_sp(false), jmin(n), jmax(0), threads(1), iter(0), tot_l(0),
 #ifdef _OPENMP
 	//max_threads(1),
-	max_threads(omp_get_max_threads()>40?40:omp_get_max_threads()),
+	max_threads(omp_get_max_threads()>20?20:omp_get_max_threads()),
 #else
 	max_threads(1),
 #endif
@@ -58,7 +58,9 @@ bac_sim::bac_sim(sim_params *sp):
 
 	set_rnd(sp->seed);
     printf("\n# Maximum number of threads %d\n", max_threads);
-	printf("# Elastic k = %g, sqrt(k/m)^-1 = %g, dt = %g\n\n", F_r, 1./sqrt(F_r/10), spars->dt);
+    printf("# Elastic k = %g, sqrt(k/m)^-1 = %g, dt = %g\n", F_r, 1./sqrt(F_r/10), spars->dt);
+    printf("# Total area available for growth %g\n", (bx-ax)*(by-ay));
+    printf("# Stopping force %g\n\n", stop_force);
 
 }
 
@@ -132,11 +134,13 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 	// Output the initial fields and record initial time
 	//tb = total_bacteria();
     double total_area=0;
-	specific_bac_count(num_st1, num_st2, ap1, ap2, total_area, sh1, sh2);
+    // number of cells with crd factor = 0
+    int nzcf = 0;
+	specific_bac_count(num_st1, num_st2, nzcf, ap1, ap2, total_area, sh1, sh2);
 	tb = num_st1+num_st2;
 	if(verbose){
-		printf("# Frame\ttime\tnbact\tstrain0(red)\ttstrain1(blue)\t active0 \t active1 \t sheath1 \t sheath2 \ttotal area \t threads \tcalc_force time \t int_and_div time \t remap time\n");
-		printf("# %d\t%.4g\t%d\t%d\t%d\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\n", f_count, time, tb, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area);
+		printf("# Frame\t time\t nbact (zero growth)\t strain0(red)\t strain1(blue)\t active0\t active1\t sheath1\t sheath2\t occupied area (perc of tot) \t threads\t calc_force time\t int_and_div time\t remap time\n");
+		printf("# %d\t%.04g\t%d (%d) \t%d\t%d\t%.04g\t%.04g\t%.04g\t%.04g\t%.06g\t%.04g\t%d\t --\t--\t--\n", f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads);
 	}
     int nfields = 14;
 	// storing data to external structure:
@@ -182,10 +186,10 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 		l++;
 		// Print diagnostic information
 		t2=wtime();
-		specific_bac_count(num_st1, num_st2, ap1, ap2, total_area, sh1, sh2);
+		specific_bac_count(num_st1, num_st2, nzcf, ap1, ap2, total_area, sh1, sh2);
 		tb = num_st1+num_st2;
 		if(verbose){
-            printf("# %d\t%.4g\t%d\t%d\t%d \t %.4g \t %.4g \t%.4g \t%.4g \t%.4g \t%d \t%.4g \t%.4g \t%.4g\n", k+f_count, time, tb, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, threads, compt_times[0], compt_times[1], compt_times[2]);
+            printf("# %d\t%.04g\t%d (%d) \t%d\t%d \t %.04g \t %.04g \t%.04g \t%.04g \t%.06g \t%.02g\t %d \t%.04g \t%.04g \t%.04g\n", k+f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads, compt_times[0], compt_times[1], compt_times[2]);
 	}
 		// storing data to external structure:
 		data[k*nfields] = time;
@@ -241,13 +245,15 @@ void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool out
     double total_area=0;
 	double ap1=0, ap2=0;
     double sh1=0, sh2=0;
-	specific_bac_count(num_st1, num_st2, ap1, ap2, total_area, sh1, sh2);
+    // number of cells with zero crowd factor
+    int nzcf = 0;
+	specific_bac_count(num_st1, num_st2, nzcf, ap1, ap2, total_area, sh1, sh2);
 	tb = num_st1+num_st2;
 
     if(tb>=target_tb) return;
 
 	if(verbose){
-		printf("# Wall time (unit) \tSim time\tframe\tnbact\tstrain0(red)\tstrain1(blue)\t active0 \t active1 \tsheaths1 \t sheaths2 \tnum_threads\n");
+		printf("# Wall time (unit)\t Sim time\t frame\t nbact\t strain0(red)\t strain1(blue)\t active0\t active1\t sheaths1\t sheaths2\t num_threads\n");
 		printf("# %8.4g seconds\t%.4g\t%d\t%d\t%d\t%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\n", wallt, time, 0, tb, num_st1, num_st2, ap1, ap2, sh1, sh2, threads);
 	}
 
@@ -268,7 +274,7 @@ void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool out
 		    step_forward(dt_max);
 		}
 
-		specific_bac_count(num_st1, num_st2, ap1, ap2, total_area, sh1, sh2);
+		specific_bac_count(num_st1, num_st2, nzcf, ap1, ap2, total_area, sh1, sh2);
 		tb = num_st1+num_st2;
 		t0 = wtime() - t0;
 		wallt += t0;
@@ -364,7 +370,7 @@ int bac_sim::total_bacteria() {
 	return tot;
 }
 
-void bac_sim::specific_bac_count(int &sp1, int &sp2, double &actPerc1, double &actPerc2, double& tot_area, double &sh1, double &sh2){
+void bac_sim::specific_bac_count(int &sp1, int &sp2, int &num_zero_crdfac, double &actPerc1, double &actPerc2, double& tot_area, double &sh1, double &sh2){
     
 	int tot[2]={0,0};
 	int act[2]={0,0};
@@ -372,6 +378,8 @@ void bac_sim::specific_bac_count(int &sp1, int &sp2, double &actPerc1, double &a
 	tot_area = 0;
 	actPerc1 = 0; actPerc2 = 0;
     sh1 = 0, sh2 = 0;
+    num_zero_crdfac = 0;
+
 	for(int i=0;i<mn;i++){
 		for(int j=0;j<co[i];j++){
 		    // NOTE assume the type is 0 and 1
@@ -380,6 +388,7 @@ void bac_sim::specific_bac_count(int &sp1, int &sp2, double &actPerc1, double &a
                 tot[ba[i][j].type]++;
                 sheaths[ba[i][j].type] += ba[i][j].sheaths;
                 if(ba[i][j].t6_on) act[ba[i][j].type]++;
+                if(ba[i][j].linear_crdfac(stop_force)==0) num_zero_crdfac++;
 		    }
 		}
 	}
@@ -466,14 +475,6 @@ void bac_sim::integrate_and_divide(double dt, bool verbose) {
                     int make_one = gsl_rand(j) < base_sheath_rate;
                     b->sheaths += make_one;
                     int fire_one =  gsl_rand(j) < frate;
- //                 if(b->id == 836 || b->id == 119) {
- //                     printf("bac %d type (%d), pos (%g %g) stabs one? %d \n", b->id, b->type, b->x, b->y, fire_one);
- //                     for(int nnn=0;nnn<b->num_neigh; nnn++) {
- //                         printf("-> Found neighbors at block %d block id %d\n", b->neighbors[nnn].s, b->neighbors[nnn].q);
- //                         bact &tmpBact =  ba[b->neighbors[nnn].s][b->neighbors[nnn].q];
- //                         printf("-> Neighbor position (%g %g) neighbor id %d type %d, live? %d\n", tmpBact.x, tmpBact.y, tmpBact.id, tmpBact.type, tmpBact.living);
- //                     }
-//                  }
                     if( fire_one ) {
                         b->sheaths -= fire_one;
                         b->num_fires += fire_one;
@@ -488,9 +489,6 @@ void bac_sim::integrate_and_divide(double dt, bool verbose) {
                             if (targBact.type != b->type) {
                                 // race condition may happen, but we don't care really
                                 targBact.stabbed = true;
-//                              if(b->id == 836 || b->id == 119) {
-//                                  printf("-> Bact %d's target is getting stab: targ id %d targ living %d\n", b->id, targBact.id, targBact.living);
-//                              }
                             } else {
                                 // TODO: sister cells should get same relief from recycled material
                             }
@@ -512,7 +510,6 @@ void bac_sim::integrate_and_divide(double dt, bool verbose) {
             b->mark_stabbed_as_dead();
 
             if(b->divide()) {
-               //if(b->id == 836 || b->id ==119) printf("b id %d is ready to divide is it alive? %d\n", b->id, b->living);
                 if(co[s]==mem[s]){
                     add_region_memory(s);
                     // Since the memory is reallocated
@@ -597,11 +594,11 @@ void bac_sim::calculate_forces(double dt, bool verbose) {
 
 #pragma omp parallel for num_threads(threads)
     for(int s=jmin*m;s<jmax*m;s++) {
-        //printf("thread number %d, block %d\n", omp_get_thread_num(), s);
 		for(int q=0;q<co[s];q++) {
 			calculate_force(s,q,dt,verbose);
 		}
     }
+
 }
 
 /** Calculates all of the forces and torques that are on a bacterium due to
@@ -612,13 +609,15 @@ void bac_sim::calculate_forces(double dt, bool verbose) {
  */
 void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
 	int li,ui,lj,uj,ci,cj,cij,cip,cjp;
-	double gx,gy,hx,hy,xx,yy,prx,pry;
-	bool bcap, bbcap;
+	double xx,yy,prx,pry;
+	bool bcap=false, bbcap=false;
 	// b is the bacterium on which we want to compute forces
 	bact &b=ba[s][q];
 	b.disp(xx,yy);
-	gx=b.x-xx;gy=b.y-yy;
-	hx=b.x+xx;hy=b.y+yy;
+	const double gx=b.x-xx;
+    const double gy=b.y-yy;
+	const double hx=b.x+xx;
+    const double hy=b.y+yy;
 	int_box(b.x,b.y,fabs(xx)+2*l_thresh,fabs(yy)+2*l_thresh,li,ui,lj,uj);
 
 	for(cj=lj;cj<=uj;cj++) for(ci=li;ci<=ui;ci++) {
@@ -638,52 +637,67 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
 			// just unique pairs of bacteria is considered
 			if(bb.id<=b.id) continue;
 
+            bool tmp_cap;
 			bb.ends(kx,ky,lx,ly,prx,pry,verbose);
-			// compute the closest point on bact b to (kx, ky) end of bact bb
-			// store in (ox, oy), the point stored in (px, py)
-			min_distance(gx,gy,hx,hy,kx,ky,ox,oy,bcap);
+			// compute the closest point on bact b, with end points
+            // (gx, gy) and (hx, hy), to point (kx, ky), one end of bact bb
+			// The point of shortest distance to (kx, ky) on bact b, is stored in (ox, oy)
+            // The counter part on this shortest line segment is stored in (px, py)
+			min_distance(gx,gy,hx,hy,kx,ky,ox,oy,tmp_cap);
 			rsq=dis_sq(kx,ky,ox,oy);px=kx;py=ky;
+            // Update if the caps are involved in this segment
+            // Since we consider (kx, ky) then bbcap is by default true
+            bcap=tmp_cap; bbcap = true;
 
-			// compute the closest point on bact b to (lx, ly) end of bact bb
-			// store in (qx, qy)
-			min_distance(gx,gy,hx,hy,lx,ly,qx,qy,bcap);
+			min_distance(gx,gy,hx,hy,lx,ly,qx,qy,tmp_cap);
 			nrsq=dis_sq(lx,ly,qx,qy);
-
-			// if nrsq is shorter, update rsq by nrsq
-			// update (ox, oy) with (qx, qy) -- point on the bact b
-			// and (px, py) with (lx, ly) -- point on bact bb
 			if(nrsq<rsq) {
-				rsq=nrsq;ox=qx;oy=qy;px=lx;py=ly;
+				rsq=nrsq;
+                // If this distance is shorter, we keep the new points
+                // (ox, oy) is the point on bact b, (px, py) that on bact bb
+                ox=qx;oy=qy;px=lx;py=ly;
+                // update whether the cap area is in touch
+                bcap = tmp_cap; bbcap = true;
 			}
 
-			min_distance(kx,ky,lx,ly,gx,gy,qx,qy,bbcap);
+			min_distance(kx,ky,lx,ly,gx,gy,qx,qy,tmp_cap);
 			nrsq=dis_sq(gx,gy,qx,qy);
 			if(nrsq<rsq) {
 				rsq=nrsq;ox=gx;oy=gy;px=qx;py=qy;
+                bcap = true; bbcap = tmp_cap;
 			}
 
-			min_distance(kx,ky,lx,ly,hx,hy,qx,qy,bbcap);
+			min_distance(kx,ky,lx,ly,hx,hy,qx,qy,tmp_cap);
 			nrsq=dis_sq(hx,hy,qx,qy);
 			if(nrsq<rsq) {
 				rsq=nrsq;ox=hx;oy=hy;px=qx;py=qy;
+                bcap = true; bbcap = tmp_cap;
 			}
 			// in the end, we find the closet distance between two bacteria
-			// stored in (ox, oy) (px, py)
-			// if it's larger than (2*b_rad)**2, then they are not touching
+			// stored in (ox, oy) (px, py), if the bacteria are not crossed,
+            // and if the shortest distance is larger than (2*b_rad), then they are not touching
 
-            // check crossing of two bacteria
-			bb.ends(kx,ky,lx,ly,prx,pry);
-            b.ends(gx, gy, hx, hy, 0, 0);
-
+            // First we get the y=m1*x+b1 function for the line of bact b
             double m1 = (hy-gy)/(hx-gx), b1 = gy - m1*gx, m1inv = 1./m1;
+            // Then we know the lines perpendicular to that has the slope -1/m1
+            // Then we can get coefficients for lines passing through (lx, ly) and (kx, ky)
+            // that are also perpendicular to bact b
             double tmp_bk = ky + m1inv * kx, tmp_bl = ly + m1inv * lx;
+
+            // Finding the intersect between bact b line and the perpendicular line passing (kx, ky)
             double vec_kx = (tmp_bk - b1)/ (m1+m1inv), vec_ky = m1 * vec_kx + b1;
+            // subtract off (kx, ky) so it makes a vector emanating from (kx, ky)
             vec_kx -= kx; vec_ky -= ky;
 
+            // Repeat from point (lx, ly)
             double vec_lx = (tmp_bl - b1)/(m1+m1inv), vec_ly = m1 * vec_lx + b1;
             vec_lx -= lx; vec_ly -= ly;
+            // If bact bb lies on one side of the line of bact b, dot 1 > 0
             double dot1 = vec_kx * vec_lx + vec_ky * vec_ly;
 
+            // A scenario where one line segment can be consider lying one half plane divided by another
+            // but the converse is not true. So here, we do the calculation yet again but switch to
+            // the half plane divided by bact bb.
             double m2 = (ky-ly)/(kx-lx), b2 = ky - m2*kx, m2inv = 1./m2;
             double tmp_bg = gy + m2inv*gx, tmp_bh = hy + m2inv*hx;
             double vec_gx = (tmp_bg - b2)/(m2 + m2inv), vec_gy = m2*vec_gx + b2;
@@ -692,8 +706,12 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
             vec_hx -= hx; vec_hy -= hy;
             double dot2 = vec_gx * vec_hx + vec_gy * vec_hy;
 
-            // Update: some cells still cross, and they are not taken into account as "overlapping"
-            if(rsq>two_b_rad_rsq && (dot1 >=0 || dot2 >=0) ) continue;
+            // If the two bacteria cross, the dot product of the distance vectors computed from above would be negative
+            bool crossed = (dot1<=0 && dot2<=0);
+
+            // If the separation is larger than 2 radii, and they are not crossing
+            // Then they are definitely not in touch
+            if(rsq>two_b_rad_rsq && !crossed) continue;
 
 			// if they are touching, they have a chance of firing at each other
             b.num_neigh ++;
@@ -701,8 +719,6 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
 
             bb.num_neigh ++;
             bb.add_neighbor(s, q);
-
-            if(rsq>two_b_rad_rsq) continue;
 
             // compute the force per unit length
             // re-use nrsq
@@ -725,17 +741,32 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
                 double back_shifted[4] = {ox-prx, oy-pry, px-prx, py-pry};
                 bb.add_inhibit_forces(local_rep_force, back_shifted[0], back_shifted[1], back_shifted[2], back_shifted[3], contact_length);
             }
+            // If they are crossed, we make sure the stop them from growing
+            if (crossed) {
+                b.inh_force_down = 2*stop_force;
+                b.inh_force_up = 2*stop_force;
+                bb.inh_force_down = 2*stop_force;
+                bb.inh_force_up = 2*stop_force;
+            }
 			// force in x direction, pointing from ox to px
 			cfx=local_rep_force*(px-ox);
 			// force in y direction, pointing from oy to py
 			cfy=local_rep_force*(py-oy);
 
-			// assume that the bacteria are squeezed equally
-			// so the interface between two bacteria is at the mid point
-			// between (ox, oy) and (px, py)
-			bb.add_force(cfx,cfy,0.5*(px+ox)-prx,0.5*(py+oy)-pry);
-			// add equal, opposite force to b
-			b.add_force(-cfx,-cfy,0.5*(px+ox),0.5*(py+oy));
+            if(!crossed){
+                // assume that the bacteria are squeezed equally
+                // so the interface between two bacteria is at the mid point
+                // between (ox, oy) and (px, py)
+                bb.add_force(cfx,cfy,0.5*(px+ox)-prx,0.5*(py+oy)-pry);
+                // add equal, opposite force to b
+                b.add_force(-cfx,-cfy,0.5*(px+ox),0.5*(py+oy));
+            } else {
+                // if the bacteria are crossed, we reverse the force arm to try and separate them
+                double new_center_x = 2*bb.x - 0.5*(px+ox);
+                double new_center_y = 2*bb.y - 0.5*(py+oy);
+                bb.add_force(cfx,cfy,new_center_x-prx, new_center_y-pry);
+                b.add_force(-cfx,-cfy, new_center_x, new_center_y);
+            }
 		}
 	}
 }
@@ -757,6 +788,8 @@ bool bac_sim::search_id(int shid,int &ss,int &qq) {
  * \param[out] (ox,oy) the position on the bacterium that is closest to the
  *		       given point. */
 void bac_sim::min_distance(double gx,double gy,double hx,double hy,double kx,double ky,double &ox,double &oy,bool &cap) {
+    // creating two vectors, one along the body of the current bacterium (px, py)
+    // the other is from the point (gx, gy) on bacterium to the point to consider (kx, ky)
 	double px=hx-gx,py=hy-gy,dis=(px*(kx-gx)+py*(ky-gy))/(px*px+py*py);
 	cap=false;
 	if(dis<0) {dis=0; cap=true;}
