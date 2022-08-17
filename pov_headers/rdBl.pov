@@ -31,6 +31,6 @@ light_source{<500,-150,450> color rgb <0.41,0.43,0.43>}
 #declare t5=texture{pigment{rgb <0.63,0.75,0.72>} finish{f0}}
 #declare t6=texture{pigment{rgb <0.75,0.5,0.9>} finish{f0}}
 #declare t7=texture{pigment{rgb <0.63,0.75,0.72>} finish{f0}}
-#declare r=1.0;
+#declare r=2.0;
 
 #include "bac.pov"
