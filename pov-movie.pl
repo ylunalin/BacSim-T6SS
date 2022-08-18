@@ -35,6 +35,8 @@ $povm="pov_headers/$hn.pov";
 $prd_len = defined $opt_o?$opt_o:0;
 $fpref = defined $opt_z?$opt_z : "f";
 $fsuff = "_nr";
+$max_threads=10;
+$queue=0;
 
 # Set POV-Ray-related variables
 $pov_width=1000;
@@ -166,8 +168,18 @@ EOF
 	}
 	close A;
 
-    print "Rendering frame $a nr $nr...\n";
+    print "Rendering frame $a nr $nr, sent to fork $h\n";
     exec "cd $dr; povray -D +O$fn +W$pov_width +H$pov_height $pov_flags rtemp$h.pov $verb" if (($pid[$h]=fork)==0);
+
+	# Wait for one of the forked jobs to finish
+	if ($queue) {
+		print "Waiting...\n";
+		$piddone=wait;$h=1;
+		$h++ while $piddone!=$pid[$h]&&$h<=$max_threads;
+		die "PID return error!\n" if $h>$max_threads;
+	} else {
+		$h++;$queue=1 if $h>=$max_threads;
+	}
 
     if(defined $opt_x) {
             if($nr == $opt_x-1) {
@@ -182,6 +194,8 @@ EOF
     # update the filename
     $in_fn=sprintf("%s/%s.%05d%s%d", $dr, $fpref, $a, $fsuff, $nr);
 }
+wait foreach 1..($max_threads);
+
 print "Done with rendering all frames.\n";
 
 # Automatically create a movie if requested
