@@ -6,8 +6,8 @@ Yuexia Luna Lin
 _FlexLab, Ecole Polytechnique Federale de Lausanne, Switzerland_
 
 Chris H. Rycroft
+_Department of Mathematics, University of Wisconsin-Madison_
 
-_John A. Paulson School of Engineering and Applied Sciences, Harvard University_
 ## Software/library requirements:
 
 - GNUMake
