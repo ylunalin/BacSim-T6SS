@@ -8,20 +8,20 @@ getopts("b:de:hmn:q:s:vx:z:");
 
 # Print help message if -h option is specified
 if (defined($opt_h)) {
-	print "Usage: pov-movie.pl <switches> <snapshot-directory> [<header_file_name>]\n\n";
-	print "Switches:\n";
-	print "-b <frame>        (Start rendering from this frame)\n";
-	print "-d                (Don't duplicate existing files)\n";
-	print "-e <num>          (Only render every <num> frame)\n";
-	print "-h                (Print help information)\n";
-	print "-m                (Switch on movie creation)\n";
-	print "-n <frame>        (Render up to <frame> frames)\n";
-	print "-q <quality>      (Quality of rendering, 1=good, 3=extreme)\n";
-	print "-s <frame>        (Render a single frame)\n";
-	print "-v                (Verbose output)\n";
-	print "-x <nr>           (Render number <nr> of realizations)\n";
-	print "-z <prefix>       (The prefix of theRender number <nr>)\n";
-	exit 0;
+    print "Usage: pov-movie.pl <switches> <snapshot-directory> [<header_file_name>]\n\n";
+    print "Flags:\n";
+    print "-h                (Print help information)\n";
+    print "-s <frame>        (Render a single frame)\n";
+    print "-b <frame>        (Start rendering from this frame)\n";
+    print "-e <num>          (Only render every <num> frame)\n";
+    print "-n <num>          (Render a given number of frames)\n";
+    print "-d                (Don't duplicate existing files)\n";
+    print "-m                (Switch on movie creation)\n";
+    print "-q <quality>      (Quality of rendering, 1=good, 3=extreme)\n";
+    print "-v                (Verbose output)\n";
+    print "-x <nr>           (Render number <nr> of realizations)\n";
+    print "-z <prefix>       (The prefix of data files, default is f.)\n";
+    exit 0;
 }
 
 die "One or two arguments required" unless @ARGV==1 || @ARGV==2;

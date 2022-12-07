@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
 	// Print out some summary
 	char buf[256];
-	sprintf(buf,"hours");
+	snprintf(buf, 256, "hours");
     t /=3600.;
 
     puts("#");

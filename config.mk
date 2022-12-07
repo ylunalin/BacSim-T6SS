@@ -1,11 +1,4 @@
-# The compilers used here are GNU GCC and G++ 9 installed with MacPorts.
-# Replace the compiler commands and the flags with ones on your computing system.
-#cc=gcc-mp-9
-#cxx=g++-mp-9 -fopenmp
-#cflags=-Wall -march=native -ansi -pedantic -O0 -fopenmp -std=c++11 -fPIC -lstdc++fs -Wno-variadic-macros -g
-
-
-# Compiler and compilation flags used on a Linux machine
-cc=gcc
-cxx=g++
-cflags=-Wall -ansi -pedantic -O3 -fopenmp -std=c++11 -fPIC -lstdc++fs -Wno-variadic-macros -g -ggdb -Wuninitialized
+# Compiler and compilation flags, using gcc 12 installed by MacPorts
+cc=gcc-mp-12
+cxx=g++-mp-12 -fopenmp
+cflags=-Wall -march=native -ansi -pedantic -O3 -fopenmp -std=c++11 -fPIC -lstdc++fs -Wno-variadic-macros -g -Wuninitialized

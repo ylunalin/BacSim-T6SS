@@ -214,10 +214,10 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 	f_count+=frames;
 	t=wtime()-t;
 	char unit[256];
-	sprintf(unit,"seconds");
+	snprintf(unit, 256, "seconds");
 	if(t>300) {
-		t/= 60; sprintf(unit, "minutes");
-		if(t>60) {t/=60; sprintf(unit, "hours");}
+		t/= 60; snprintf(unit, 256, "minutes");
+		if(t>60) {t/=60; snprintf(unit, 256, "hours");}
 	}
 	if(verbose){
 		printf("# Total time %.6g %s\n"
@@ -282,11 +282,11 @@ void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool out
 		if(verbose && int(wallt / o_time) > c_co){
 			c_co++;
 
-			sprintf(unit,"seconds");
+			snprintf(unit, 256, "seconds");
 			double tmp_t = wallt;
 			if(tmp_t>300) {
-				tmp_t/= 60; sprintf(unit, "minutes");
-				if(tmp_t>60) {tmp_t/=60; sprintf(unit, "hours");}
+				tmp_t/= 60; snprintf(unit, 256, "minutes");
+				if(tmp_t>60) {tmp_t/=60; snprintf(unit, 256, "hours");}
 			}
             printf("# %8.4g %s\t%.4g\t%d\t%d\t%d\t%d\t%.4g\t%.4g\t%.4g\t%.4g\t%d\n", tmp_t, unit, time, f_count, tb, num_st1, num_st2, ap1, ap2, sh1, sh2, threads);
 			if(output){
@@ -296,10 +296,10 @@ void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool out
 		}
 	}
 
-    sprintf(unit,"seconds");
+    snprintf(unit, 256, "seconds");
     if(wallt>300) {
-        wallt/= 60; sprintf(unit, "minutes");
-        if(wallt>60) {wallt/=60; sprintf(unit, "hours");}
+        wallt/= 60; snprintf(unit, 256, "minutes");
+        if(wallt>60) {wallt/=60; snprintf(unit, 256, "hours");}
     }
 
 	if(verbose){
@@ -752,7 +752,15 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
 			cfx=local_rep_force*(px-ox);
 			// force in y direction, pointing from oy to py
 			cfy=local_rep_force*(py-oy);
+            // assume that the bacteria are squeezed equally
+            // so the interface between two bacteria is at the mid point
+            // between (ox, oy) and (px, py)
+            bb.add_force(cfx,cfy,0.5*(px+ox)-prx,0.5*(py+oy)-pry);
+            // add equal, opposite force to b
+            b.add_force(-cfx,-cfy,0.5*(px+ox),0.5*(py+oy));
 
+            /*
+            // Problematic code, to be DELETED
             if(!crossed){
                 // assume that the bacteria are squeezed equally
                 // so the interface between two bacteria is at the mid point
@@ -767,6 +775,7 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
                 bb.add_force(cfx,cfy,new_center_x-prx, new_center_y-pry);
                 b.add_force(-cfx,-cfy, new_center_x, new_center_y);
             }
+            */
 		}
 	}
 }
@@ -801,7 +810,7 @@ void bac_sim::min_distance(double gx,double gy,double hx,double hy,double kx,dou
  * positions, lengths, and rotations.
  * \param[in] k the integer suffix to add to the filename. */
 void bac_sim::write(int k) {
-	sprintf(buf,"%s/f.%05d_nr%d",filename,k,iter);
+	snprintf(buf, 256, "%s/f.%05d_nr%d",filename,k,iter);
 	FILE *fp=safe_fopen(buf,"w");
 	fprintf(fp,"#type x y half_len theta id pid on sheaths crowd_fac num_neigh actual_growth_rate actual_sheath_rate t_birth l_birth inter_div_time num_fires\n");
 	for(int s=0;s<mn;s++) {
