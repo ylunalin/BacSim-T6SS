@@ -47,6 +47,8 @@ class bac_sim {
 		const double xsp;
 		/** The inverse length of a block in the y direction. */
 		const double ysp;
+		/** A global variable for crowding factor based on carrying capacity */
+        double global_crd_fac;
 		/** The name of the directory in which to store the output. */
 		const char *filename;
 		/** A counter for the total number of bacteria inserted, used
@@ -125,6 +127,7 @@ class bac_sim {
 
 		/** Data analysis functions */
 		int total_bacteria();
+        double cal_global_crd_fac();
 		void specific_bac_count(int &sp1, int &sp2, int &num_zero_crd_fac, double &ap1, double &ap2, double &tot_area, double &sh1, double &sh2);
 
 	//private:

@@ -14,7 +14,8 @@ bac_sim::bac_sim(sim_params *sp):
     m(spars->m), n(spars->n), mn(m*n),
 	ax(spars->ax), bx(spars->bx), ay(spars->ay), by(spars->by),
 	dx((bx-ax)/m), dy((by-ay)/n), xsp(1./dx),
-	ysp(1./dy), filename(sp->dirname),
+	ysp(1./dy), global_crd_fac (1),
+    filename(sp->dirname),
 	n_bact(0), f_count(0), nr(spars->nr),
     time(0),
 	co(new int[mn]), gh(new int[mn]), mem(new int[mn]),
@@ -119,7 +120,6 @@ void bac_sim::solve(bool output, bool verbose){
     solve(spars->dt, spars->wall_time_max, spars->target_tb, output, verbose);
 }
 
-
 /** Carries out a bacterial growth simulation
  * \param[in] duration the time interval over which to simulate.
  * \param[in] frames the number of frames to store. */
@@ -140,7 +140,7 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 	tb = num_st1+num_st2;
 	if(verbose){
 		printf("# Frame\t time\t nbact (zero growth)\t strain0(red)\t strain1(blue)\t active0\t active1\t sheath1\t sheath2\t occupied area (perc of tot) \t threads\t calc_force time\t int_and_div time\t remap time\n");
-		printf("# %d\t%.04g\t%d (%d) \t%d\t%d\t%.04g\t%.04g\t%.04g\t%.04g\t%.06g\t%.04g\t%d\t --\t--\t--\n", f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads);
+		printf("# %d\t%.04g\t%d (%d) \t%d\t%d\t%.04g\t%.04g\t%.04g\t%.04g\t%.06g\t(%.04g%%)\t%d\t --\t--\t--\n", f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads);
 	}
     int nfields = 14;
 	// storing data to external structure:
@@ -189,7 +189,8 @@ void bac_sim::solve(double duration,int frames,double dt_max,bool output, bool v
 		specific_bac_count(num_st1, num_st2, nzcf, ap1, ap2, total_area, sh1, sh2);
 		tb = num_st1+num_st2;
 		if(verbose){
-            printf("# %d\t%.04g\t%d (%d) \t%d\t%d \t %.04g \t %.04g \t%.04g \t%.04g \t%.06g \t%.02g\t %d \t%.04g \t%.04g \t%.04g\n", k+f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads, compt_times[0], compt_times[1], compt_times[2]);
+            printf("# %d\t%.04g\t%d (%d) \t%d\t%d\t%.04g\t%.04g\t%.04g\t%.04g\t%.06g\t(%.04g%%)\t%d\t --\t--\t--\n", k+f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads);
+            //printf("# %d\t%.04g\t%d (%d) \t%d\t%d \t %.04g \t %.04g \t%.04g \t%.04g \t%.06g \t%.02g\t %d \t%.04g \t%.04g \t%.04g\n", k+f_count, time, tb, nzcf, num_st1, num_st2, ap1, ap2, sh1, sh2, total_area, total_area*100/((bx-ax)*(by-ay)), threads, compt_times[0], compt_times[1], compt_times[2]);
 	}
 		// storing data to external structure:
 		data[k*nfields] = time;
@@ -324,6 +325,7 @@ void bac_sim::solve(double dt_max, double wall_time_max, int target_tb, bool out
 void bac_sim::step_forward(double dt, bool verbose) {
     if(dt<0.) return;
 
+    global_crd_fac = cal_global_crd_fac();
     double ttmp = wtime();
 	calculate_forces(dt, verbose);
     ttmp = wtime() - ttmp;
@@ -370,6 +372,19 @@ int bac_sim::total_bacteria() {
 	return tot;
 }
 
+/** Calculates the total area taken up by all bacteria. */
+double bac_sim::cal_global_crd_fac() {
+    double tot_area = 0;
+
+    for(int i=0;i<mn;i++){
+        for(int j=0;j<co[i];j++){
+            tot_area += ba[i][j].area();
+        }
+    }
+    return 1-tot_area/((bx-ax)*(by-ay));
+}
+
+/** Calculate stats specific to each strain. */
 void bac_sim::specific_bac_count(int &sp1, int &sp2, int &num_zero_crdfac, double &actPerc1, double &actPerc2, double& tot_area, double &sh1, double &sh2){
     
 	int tot[2]={0,0};
@@ -384,12 +399,12 @@ void bac_sim::specific_bac_count(int &sp1, int &sp2, int &num_zero_crdfac, doubl
 		for(int j=0;j<co[i];j++){
 		    // NOTE assume the type is 0 and 1
 		    tot_area += ba[i][j].area();
-		    if(ba[i][j].living) {
+		    //if(ba[i][j].living) {
                 tot[ba[i][j].type]++;
                 sheaths[ba[i][j].type] += ba[i][j].sheaths;
                 if(ba[i][j].t6_on) act[ba[i][j].type]++;
                 if(ba[i][j].linear_crdfac(stop_force)==0) num_zero_crdfac++;
-		    }
+		    //}
 		}
 	}
 	sp1 = (double) tot[0];
@@ -436,7 +451,7 @@ void bac_sim::integrate_and_divide(double dt, bool verbose) {
 			// and that the lag time is over
 			if (b->living && time > spars->lag_times[BT]) {
                 // Linear force-dependent growth regulation
-                double crd_fac = b->linear_crdfac(stop_force);
+                double crd_fac = b->linear_crdfac(stop_force) * global_crd_fac;
 
                 {
                     double base_rate = spars->growth_rates[BT];
@@ -758,24 +773,6 @@ void bac_sim::calculate_force(int s,int q, double dt, bool verbose) {
             bb.add_force(cfx,cfy,0.5*(px+ox)-prx,0.5*(py+oy)-pry);
             // add equal, opposite force to b
             b.add_force(-cfx,-cfy,0.5*(px+ox),0.5*(py+oy));
-
-            /*
-            // Problematic code, to be DELETED
-            if(!crossed){
-                // assume that the bacteria are squeezed equally
-                // so the interface between two bacteria is at the mid point
-                // between (ox, oy) and (px, py)
-                bb.add_force(cfx,cfy,0.5*(px+ox)-prx,0.5*(py+oy)-pry);
-                // add equal, opposite force to b
-                b.add_force(-cfx,-cfy,0.5*(px+ox),0.5*(py+oy));
-            } else {
-                // if the bacteria are crossed, we reverse the force arm to try and separate them
-                double new_center_x = 2*bb.x - 0.5*(px+ox);
-                double new_center_y = 2*bb.y - 0.5*(py+oy);
-                bb.add_force(cfx,cfy,new_center_x-prx, new_center_y-pry);
-                b.add_force(-cfx,-cfy, new_center_x, new_center_y);
-            }
-            */
 		}
 	}
 }

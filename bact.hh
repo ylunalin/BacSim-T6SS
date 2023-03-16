@@ -123,9 +123,6 @@ struct bact : public strain {
     // Even though bacteria are 2D, we assume the moment of inertia
     // is computed as a 3D spherocylinder
 	double m_inertia() const{
-		// This formula isn't quite right, but it probably doesn't
-		// matter since there are many things that could influence the
-		// rotational behavior.
         double h_rod_l = (l - r0);
         if(h_rod_l<0) h_rod_l=0;
         double rod_part = body_area_multiplier*h_rod_l*h_rod_l*h_rod_l*0.6666667;
