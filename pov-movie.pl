@@ -4,7 +4,7 @@ use Sys::Hostname;
 
 open A,"$ARGV[0]/zinfo";
 #srand 1729;
-getopts("b:de:hmn:q:s:vx:z:");
+getopts("b:de:hmn:pq:s:vx:z");
 
 # Print help message if -h option is specified
 if (defined($opt_h)) {
@@ -17,10 +17,11 @@ if (defined($opt_h)) {
     print "-n <num>          (Render a given number of frames)\n";
     print "-d                (Don't duplicate existing files)\n";
     print "-m                (Switch on movie creation)\n";
+    print "-p <prefix>       (The prefix of data files, default is f.)\n";
     print "-q <quality>      (Quality of rendering, 1=good, 3=extreme)\n";
     print "-v                (Verbose output)\n";
     print "-x <nr>           (Render number <nr> of realizations)\n";
-    print "-z <prefix>       (The prefix of data files, default is f.)\n";
+    print "-z                (Zoom in to a patch of 200um x 200 um)\n";
     exit 0;
 }
 
@@ -33,7 +34,7 @@ $ff=$opt_l?"li":($opt_a?"an":"fr");
 $as=defined $opt_c?$opt_c:-1;
 $povm="pov_headers/$hn.pov";
 $prd_len = defined $opt_o?$opt_o:0;
-$fpref = defined $opt_z?$opt_z : "f";
+$fpref = defined $opt_p?$opt_p : "f";
 $fsuff = "_nr";
 $max_threads=10;
 $queue=0;
@@ -106,6 +107,9 @@ while(-e $in_fn) {
 	$cam=sqrt $cam;
 	$cam+=1;
 	$cam*=2.5;
+    if($opt_z) {
+        $cam=670;
+    }
 	$ncam=$cam if $ncam<$cam;
 
 	# Assemble the POV file
