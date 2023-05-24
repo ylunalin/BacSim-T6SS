@@ -28,7 +28,7 @@ struct bact : public strain {
     bool t6_on;
 	/** Status of the bacterium. */
 	bool living;
-	/** Whehter it has been stabbed this time step */
+	/** Whether it has been stabbed this time step */
 	bool stabbed;
 	/** Status of the dead carcass of bacterium. */
 	bool dissolved;
@@ -161,7 +161,7 @@ struct bact : public strain {
     void add_inhibit_forces(double f, double ox, double oy, double cx, double cy, double length){
         // (ox,oy) the coordinate of the contact point, on the other bacterium
         // (cx,cy) the coordinate of center of the cap that's under contact
-        // (cx-x, cy-y) is the vector pointing from center of cell to cell of cap, l is its magnitdue
+        // (cx-x, cy-y) is the vector pointing from center of cell to cell of cap, l is its magnitude
         // (ox-cx, oy-cy) is the vector between two contact points
         // length is the magnitude of (ox-cx,oy-cy)
         // f is the magnitude of contact force
