@@ -153,7 +153,7 @@ class bac_sim {
         const double two_b_rad;
         /** A useful constant in determining bacteria overlaps. */
         const double two_b_rad_rsq;
-		/** Threshhold to determine if two bac overlap.*/
+		/** Threshold to determine if two bac overlap.*/
 		const double l_thresh;
 		/** Repulsive force constant. */
         double F_r;
